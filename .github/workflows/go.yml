@@ -19,7 +19,7 @@ permissions:
 
 jobs:
 
-  build:
+  init:
     strategy:
       matrix:
         go: [ 1.18 ]
@@ -34,18 +34,12 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
+          cache: true
 
       # Run vet on the code
       - name: Run vet
         run: |
           go vet ./...
-
-      # Golang CI lint action
-      - name: Check lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.29
-          only-new-issues: true
 
       # Run testing on the code
       - name: Test
