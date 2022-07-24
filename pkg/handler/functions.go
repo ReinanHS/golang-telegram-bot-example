@@ -22,7 +22,7 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 
 	// Parse incoming request
 	var update, err = parseTelegramRequest(r)
-	if err != nil || update.Message == nil {
+	if err != nil {
 		w = responseMessage("Could not read update request", http.StatusUnprocessableEntity, w)
 		return
 	}
