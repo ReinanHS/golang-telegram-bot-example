@@ -40,14 +40,22 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 // parseTelegramRequest handles incoming update from the Telegram web hook
 func parseTelegramRequest(r *http.Request) (*telegramApi.Update, error) {
 	var update telegramApi.Update
+
+	if r.Method != http.MethodPost {
+		log.Printf("unsupported method %s", r.Method)
+		return nil, errors.New("unsupported method " + r.Method)
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		log.Printf("could not decode incoming update %s", err.Error())
 		return nil, err
 	}
+
 	if update.UpdateID == 0 {
 		log.Printf("invalid update id, got update id = 0")
 		return nil, errors.New("invalid update id of 0 indicates failure to parse incoming update")
 	}
+
 	return &update, nil
 }
 
