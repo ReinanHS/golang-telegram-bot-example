@@ -2,21 +2,30 @@ name: Go
 
 on:
   push:
-    branches: 
+    branches:
       - "main"
       - "staging"
       - "develop"
 
   pull_request:
-    branches: 
+    branches:
       - "main"
       - "staging"
       - "develop"
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ 1.18 ]
+        os: [ ubuntu-latest ]
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
@@ -24,19 +33,19 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: ${{ matrix.go }}
 
-      # Install all the dependencies
-      - name: Install dependencies
-        run: |
-          go version
-          go get -u golang.org/x/lint/golint
-
-      # Run vet & lint on the code
-      - name: Run vet & lint
+      # Run vet on the code
+      - name: Run vet
         run: |
           go vet ./...
-          golint ./...
+
+      # Golang CI lint action
+      - name: Check lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.29
+          only-new-issues: true
 
       # Run testing on the code
       - name: Test
