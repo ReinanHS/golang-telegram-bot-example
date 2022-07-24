@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	telegramApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/reinanhs/golang-telegram-bot-example/internal/application/dto"
 	"log"
 	"net/http"
 	"os"
@@ -15,26 +16,50 @@ const telegramTokenEnv string = "TELEGRAM_BOT_TOKEN"
 func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 	var bot, errBot = telegramApi.NewBotAPI(os.Getenv(telegramTokenEnv))
 	if errBot != nil {
-		responseMessage("Could not start bot", http.StatusInternalServerError, w)
-		log.Fatalf("error could not start bot, %s", errBot)
+		w = responseMessage("Could not start bot", http.StatusInternalServerError, w)
 		return
 	}
 
 	// Parse incoming request
 	var update, err = parseTelegramRequest(r)
-
 	if err != nil {
-		responseMessage("Could not read update request", http.StatusUnprocessableEntity, w)
-		log.Fatalf("error parsing update, %s", err.Error())
+		w = responseMessage("Could not read update request", http.StatusUnprocessableEntity, w)
 		return
 	}
 
-	if update.Message != nil {
-		ActionHandler(update, bot)
+	err = ActionHandler(update, bot)
+	if err != nil {
+		w = responseMessage(err.Error(), http.StatusInternalServerError, w)
+		return
 	}
 
-	responseMessage("Operation performed successfully", http.StatusOK, w)
+	w = responseMessage("Operation performed successfully", http.StatusOK, w)
 	return
+}
+
+// responseMessage responsible for returning a message about the status of the request
+func responseMessage(m string, s int, w http.ResponseWriter) http.ResponseWriter {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(s)
+
+	version := os.Getenv("APP_VERSION")
+	if version == "" {
+		version = "1.0.0"
+	}
+
+	message := dto.ResponseMessage{
+		Message: m,
+		Status:  s,
+	}
+
+	resp := dto.Response{
+		Version: version,
+		Data:    dto.Data(struct{ Data interface{} }{Data: message}),
+	}
+
+	jsonResp, _ := json.Marshal(resp)
+	_, _ = w.Write(jsonResp)
+	return w
 }
 
 // parseTelegramRequest handles incoming update from the Telegram web hook
@@ -57,18 +82,4 @@ func parseTelegramRequest(r *http.Request) (*telegramApi.Update, error) {
 	}
 
 	return &update, nil
-}
-
-// ResponseMessage responsible for returning a message about the status of the request
-func responseMessage(m string, s int, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(s)
-
-	resp := make(map[string]string)
-	resp["message"] = m
-	resp["version"] = os.Getenv("APP_VERSION")
-
-	jsonResp, _ := json.Marshal(resp)
-	_, _ = w.Write(jsonResp)
-	return
 }
