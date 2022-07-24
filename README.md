@@ -14,6 +14,8 @@ This is an example project for you to create a telegram bot using golang with a 
 
 For you to interact with the chatbot you must send a message via telegram to the following user:
 
+https://user-images.githubusercontent.com/28494067/180665184-2259eff7-11a8-4aca-b94a-1e03178de29c.mp4
+
 [@GoExemploBot](https://t.me/GoExemploBot)
 
 ![Chat](https://i.imgur.com/rrbO0cX.png)
