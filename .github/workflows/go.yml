@@ -1,0 +1,45 @@
+name: Go
+
+on:
+  push:
+    branches: [
+      "main"
+      "staging"
+      "develop"
+    ]
+
+  pull_request:
+    branches: [
+      "main"
+      "staging"
+      "develop"
+    ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup Go
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      # Install all the dependencies
+      - name: Install dependencies
+        run: |
+          go version
+          go get -u golang.org/x/lint/golint
+
+      # Run vet & lint on the code
+      - name: Run vet & lint
+        run: |
+          go vet ./...
+          golint ./...
+
+      # Run testing on the code
+      - name: Test
+        run: go test -v -cover ./...
