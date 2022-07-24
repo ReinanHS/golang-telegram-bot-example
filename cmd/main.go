@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	telegramApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/reinanhs/golang-telegram-bot-example/pkg/handler"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -16,6 +18,11 @@ func main() {
 		panic("Environment `TELEGRAM_BOT_TOKEN` variable not found")
 	}
 
+	_ = withHttpHandleFunc()
+}
+
+// withTelegramApiUpdate method responsible for performing integration testing using the telegramApi
+func withTelegramApiUpdate() {
 	bot, err := telegramApi.NewBotAPI(telegramTokenEnv)
 	if err != nil {
 		panic(err)
@@ -35,4 +42,16 @@ func main() {
 			handler.ActionHandler(&update, bot)
 		}
 	}
+}
+
+// withHttpHandleFunc method responsible for creating a server to perform integration tests
+func withHttpHandleFunc() error {
+	http.HandleFunc("/", handler.HandleTelegramWebHook)
+	err := http.ListenAndServe(":3333", nil)
+
+	if err != nil {
+		return errors.New("error could not start server: " + err.Error())
+	}
+
+	return nil
 }

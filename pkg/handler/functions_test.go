@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	telegramApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/reinanhs/golang-telegram-bot-example/internal/application/dto"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -74,4 +76,35 @@ func TestParseTelegramRequest(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestResponseMessage responsible for returning a message about the status of the request
+func TestResponseMessage(t *testing.T) {
+	expectedVersion := "0.0.1"
+	expectedMessage := "ok"
+	expectedStatus := http.StatusOK
+
+	t.Setenv("APP_VERSION", expectedVersion)
+
+	w := httptest.NewRecorder()
+	responseMessage(expectedMessage, expectedStatus, w)
+
+	resp := w.Result()
+	body, _ := io.ReadAll(resp.Body)
+
+	respData := dto.Response{
+		Version: expectedVersion,
+		Data: dto.Data{
+			Data: dto.ResponseMessage{
+				Message: expectedMessage,
+				Status:  expectedStatus,
+			},
+		},
+	}
+
+	expectedJson, _ := json.Marshal(respData)
+
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, "200 OK", resp.Status)
+	assert.Equal(t, string(expectedJson), string(body))
 }
