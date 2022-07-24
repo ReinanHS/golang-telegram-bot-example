@@ -18,7 +18,8 @@ func main() {
 		panic("Environment `TELEGRAM_BOT_TOKEN` variable not found")
 	}
 
-	_ = withHttpHandleFunc()
+	//_ = withHttpHandleFunc()
+	withTelegramApiUpdate()
 }
 
 // withTelegramApiUpdate method responsible for performing integration testing using the telegramApi
@@ -37,9 +38,13 @@ func withTelegramApiUpdate() {
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
+		log.Printf("check update in telegram")
 		if update.Message != nil {
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			handler.ActionHandler(&update, bot)
+			err := handler.ActionHandler(&update, bot)
+			if err != nil {
+				log.Fatalf(err.Error())
+				return
+			}
 		}
 	}
 }

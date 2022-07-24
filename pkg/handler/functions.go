@@ -27,7 +27,12 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ActionHandler(update, bot)
+	err = ActionHandler(update, bot)
+	if err != nil {
+		w = responseMessage(err.Error(), http.StatusInternalServerError, w)
+		return
+	}
+
 	w = responseMessage("Operation performed successfully", http.StatusOK, w)
 	return
 }
